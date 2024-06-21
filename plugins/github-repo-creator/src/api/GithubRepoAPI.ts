@@ -1,53 +1,40 @@
+
+import { Octokit } from '@octokit/rest';
 import { ConfigApi, createApiRef, DiscoveryApi } from '@backstage/core-plugin-api';
-import { GithubRepo } from '../types';
-
-export type Options = {
-  discoveryApi: DiscoveryApi;
-  configApi: ConfigApi;
-};
-
-export interface GithubRepoApi {
-  createRepo(repo: GithubRepo): Promise<GithubRepo>;
-}
 
 export const GithubRepoApiRef = createApiRef<GithubRepoApi>({
   id: 'plugin.github-repo-api.service',
 });
 
-export class GithubRepoApiClient implements GithubRepoApi {
-  private readonly discoveryApi: DiscoveryApi;
-  private readonly configApi: ConfigApi;
+export type Options = {
+  configApi: ConfigApi;
+  discoveryApi: DiscoveryApi;
+};
 
-  constructor(options: Options) {
-    this.discoveryApi = options.discoveryApi;
-    this.configApi = options.configApi;
-  }
-
-  private async getBaseUrl() {
-    const proxyPath = this.configApi.getOptionalString('githubrepo.proxyPath') || '/githubrepo/api';
-    return `${await this.discoveryApi.getBaseUrl('proxy')}${proxyPath}`;
-  }
-
-  private async fetch<T = any>(input: string, init?: RequestInit): Promise<T> {
-    const proxyUrl = await this.getBaseUrl();
-    const resp = await fetch(`${proxyUrl}${input}`, init);
-    if (!resp.ok) throw new Error(resp.statusText);
-    return await resp.json();
-  }
-
-  async createRepo(repo: GithubRepo): Promise<GithubRepo> {
-    const token = process.env.GITHUB_TOKEN;
-    console.log("Token value:" , token)
-    return await this.fetch<GithubRepo>('/user/repos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(repo),
-    });
-  }
+// Creating a interface for the repo 
+export interface GithubRepoApi {
+  createRepo(repoName: string, repoDescription: string, isPrivate: boolean): Promise<void>;
 }
 
+export class GithubRepoApiClient implements GithubRepoApi {
+  private readonly octokit: Octokit;
 
+  constructor(options: Options) {
+    const token = "${GITHUB_TOKEN}"
+    this.octokit = new Octokit({
+      auth: token,
+    });
+  }
 
+  async createRepo(repoName: string, repoDescription: string, isPrivate: boolean = false): Promise<void> {
+    const response = await this.octokit.repos.createForAuthenticatedUser({
+      name: repoName,
+      description: repoDescription,
+      private: isPrivate,  // Set private flag based on input or default value
+    });
+
+    if (response.status !== 201) {
+      throw new Error('Failed to create repository');
+    }
+  }
+}

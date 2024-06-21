@@ -1,68 +1,79 @@
+
 import React, { useState } from 'react';
 import { useApi } from '@backstage/core-plugin-api';
 import { GithubRepoApiRef } from '../../api';
-import { GithubRepo } from '../../types';
-import { InfoCard,  Progress, ResponseErrorPanel } from '@backstage/core-components';
-import { Box, Typography,Button, TextField } from '@material-ui/core';
-
+import { Box, Button, TextField, Typography, FormControlLabel, Checkbox } from '@material-ui/core';
 
 export const GithubRepoComponent = () => {
-  const githubRepoClient = useApi(GithubRepoApiRef);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [repo, setRepo] = useState<GithubRepo | null>(null);
+  const [repoName, setRepoName] = useState('');
+  const [repoDescription, setRepoDescription] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false); // State for private repository checkbox
+  const [error, setError] = useState<string | null>(null);
+  const githubRepoApi = useApi(GithubRepoApiRef);
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const newRepo = await githubRepoClient.createRepo({ name, description, private: isPrivate });
-      setRepo(newRepo);
-    } catch (e: any) {
-      setError(e);
+      setError(null);
+      await githubRepoApi.createRepo(repoName, repoDescription, isPrivate); 
+      alert('Repository created successfully!');
+    } catch (err: any) {
+      setError(err.message);
     }
-    setLoading(false);
   };
 
   return (
-    <Box>
-      <InfoCard title="Create GitHub Repository">
+    <div>
+      <Box maxWidth={400} mx="auto" p={3} boxShadow={3} borderRadius={8}>
+        <Typography variant="h5" align="center" gutterBottom>
+          Create GitHub Repository
+        </Typography>
         <TextField
           label="Repository Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
+          value={repoName}
+          onChange={(e) => setRepoName(e.target.value)}
+          variant="outlined"
           fullWidth
+          margin="normal"
         />
         <TextField
-          label="Description"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
+          label="Repository Description"
+          value={repoDescription}
+          onChange={(e) => setRepoDescription(e.target.value)}
+          variant="outlined"
           fullWidth
+          margin="normal"
+          multiline
+          
         />
-        <Box display="flex" alignItems="center">
-          <Typography>Private:</Typography>
-          <input
-            type="checkbox"
-            checked={isPrivate}
-            onChange={e => setIsPrivate(e.target.checked)}
-          />
-        </Box>
-        <Button onClick={handleSubmit} disabled={loading}>
-          Create
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Private Repository"
+          style={{ marginTop: 16 }}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          fullWidth
+          size="large"
+          style={{ marginTop: 16 }}
+        >
+          Create Repository
         </Button>
-        {loading && <Progress />}
-        {error && <ResponseErrorPanel error={error} />}
-        {repo && (
-          <Box>
-            <Typography>Repository created successfully:</Typography>
-            <Typography>Name: {repo.name}</Typography>
-            <Typography>Description: {repo.description}</Typography>
-          </Box>
+        {error && (
+          <Typography color="error" align="center" style={{ marginTop: 16 }}>
+            {error}
+          </Typography>
         )}
-      </InfoCard>
-    </Box>
+      </Box>
+    </div>
   );
 };
+
+

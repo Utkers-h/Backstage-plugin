@@ -32,12 +32,12 @@ backend:
     connection: ':memory:'
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
-# integrations:
-#   github:
-#     - host: github.com
-#       # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-#       # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
-#       token: ${GITHUB_TOKEN}
+integrations:
+  github:
+    - host: github.com
+      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
+      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
+      token: ${GITHUB_TOKEN}
 #     ### Example for how to add your GitHub Enterprise instance using the API:
 #     # - host: ghe.example.net
 #     #   apiBaseUrl: https://ghe.example.net/api/v3
@@ -57,8 +57,8 @@ proxy:
       target: 'https://api.github.com'
       changeOrigin: true
       secure: true
-github:
-  token: ${GITHUB_TOKEN}
+# github:
+#   token: ${GITHUB_TOKEN}
       
 
 # Reference documentation http://backstage.io/docs/features/techdocs/configuration
@@ -72,12 +72,27 @@ techdocs:
   publisher:
     type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
-auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
-  providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    guest: {}
+# auth:
+#   # see https://backstage.io/docs/auth/ to learn about auth providers
+#   providers:
+#     # See https://backstage.io/docs/auth/guest/provider
+#     guest: {}
 
+auth:
+  environment: development
+  providers:
+    github:
+      development:
+        clientId: Ov23li8wqzZmYSTb6Q8l
+        clientSecret: ${clientSecret}
+        ## uncomment if using GitHub Enterprise
+        # enterpriseInstanceUrl: ${AUTH_GITHUB_ENTERPRISE_INSTANCE_URL}
+        signIn:
+          resolvers:
+            # Matches the GitHub username with the Backstage user entity name.
+            # See https://backstage.io/docs/auth/github/provider#resolvers for more resolvers.
+            - resolver: usernameMatchingUserEntityName
+            
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
 

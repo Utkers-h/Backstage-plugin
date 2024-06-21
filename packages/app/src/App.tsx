@@ -37,6 +37,14 @@ import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { GithubRepoPage } from '@internal/backstage-plugin-github-repo-creator/src/plugin';
+import { githubAuthApiRef } from '@backstage/core-plugin-api';
+
+const githubAuthCfg = {
+  id: 'github-auth-provider',
+  title: 'GitHub',
+  message: 'Sign in using GitHub',
+  apiRef: githubAuthApiRef,
+}
 
 const app = createApp({
   apis,
@@ -58,7 +66,7 @@ const app = createApp({
     });
   },
   components: {
-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+    SignInPage: props => <SignInPage {...props} auto providers={['guest', githubAuthCfg]} />,
   },
 });
 
@@ -96,7 +104,7 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
-    <Route path="/githubrepo" element={<GithubRepoPage />}/>
+    <Route path="/githubrepo" element={<GithubRepoPage />} />
   </FlatRoutes>
 );
 
